@@ -88,7 +88,7 @@ NewtArr continuously searches your *arr media libraries (Sonarr, Radarr, Lidarr,
 ```yaml
 services:
   newtarr:
-    image: ghcr.io/elfhosted/newtarr:latest
+    image: ghcr.io/elfhosted/newtarr:rolling
     container_name: newtarr
     restart: always
     ports:
