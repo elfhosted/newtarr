@@ -185,7 +185,10 @@ def get_cutoff_unmet_movies(api_url: str, api_key: str, api_timeout: int, monito
         # Items can be individual qualities or groups containing sub-qualities
         rank = 0
         quality_rank = {}
+        item_id_rank = {}
         for item in p.get('items', []):
+            if item.get('id') is not None:
+                item_id_rank[item['id']] = rank
             if item.get('quality'):
                 # Individual quality entry
                 quality_rank[item['quality']['id']] = rank
@@ -199,6 +202,7 @@ def get_cutoff_unmet_movies(api_url: str, api_key: str, api_timeout: int, monito
         profile_map[p['id']] = {
             'cutoff_id': p.get('cutoff'),
             'quality_rank': quality_rank,
+            'item_id_rank': item_id_rank,
         }
 
     unmet_movies = []
@@ -216,9 +220,13 @@ def get_cutoff_unmet_movies(api_url: str, api_key: str, api_timeout: int, monito
                 quality_rank = profile_info['quality_rank']
                 current_quality_id = movie_file.get("quality", {}).get("quality", {}).get("id")
 
-                # Compare by rank position in the profile, not by raw quality ID
+                # Compare by rank position in the profile, not by raw quality ID.
+                # Radarr may store the cutoff as a profile item id (e.g. a quality
+                # group like TRaSH's "WEB 2160p" = 1001) instead of a quality id.
                 current_rank = quality_rank.get(current_quality_id)
                 cutoff_rank = quality_rank.get(cutoff_id)
+                if cutoff_rank is None:
+                    cutoff_rank = profile_info.get('item_id_rank', {}).get(cutoff_id)
 
                 if current_rank is not None and cutoff_rank is not None and current_rank < cutoff_rank:
                     unmet_movies.append(movie)
