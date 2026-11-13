@@ -117,7 +117,30 @@ def debug_template_rendering():
     
 debug_template_rendering()
 
-app.secret_key = os.environ.get('SECRET_KEY', 'dev_key_for_sessions')
+def _load_secret_key():
+    k = os.environ.get('SECRET_KEY')
+    if k:
+        return k
+    p = os.path.join(os.environ.get('HUNTARR_CONFIG_DIR', '/config'), 'stateful', 'secret_key')
+    try:
+        with open(p) as f:
+            k = f.read().strip()
+        if k:
+            return k
+    except OSError:
+        pass
+    import secrets as _s
+    k = _s.token_hex(32)
+    try:
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        fd = os.open(p, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, 'w') as f:
+            f.write(k)
+    except OSError:
+        pass  # sessions then reset on restart
+    return k
+
+app.secret_key = _load_secret_key()
 
 # Register blueprints
 app.register_blueprint(common_bp)

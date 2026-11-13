@@ -891,16 +891,16 @@ let huntarrUI = {
                         const [, appName, timestamp, loggerName, level, message] = match;
                         
                         logEntry.innerHTML = ` 
-                            <span class="log-timestamp" title="${timestamp}">${timestamp.split(' ')[1]}</span> 
-                            ${appName ? `<span class="log-app" title="Source: ${appName}">[${appName}]</span>` : ''}
-                            <span class="log-level log-level-${level.toLowerCase()}" title="Level: ${level}">${level}</span>
-                            <span class="log-logger" title="Logger: ${loggerName}">(${loggerName.replace('huntarr.', '')})</span>
-                            <span class="log-message">${message}</span>
+                            <span class="log-timestamp" title="${escapeHtml(timestamp)}">${escapeHtml(timestamp.split(' ')[1])}</span> 
+                            ${appName ? `<span class="log-app" title="Source: ${escapeHtml(appName)}">[${escapeHtml(appName)}]</span>` : ''}
+                            <span class="log-level log-level-${level.toLowerCase()}" title="Level: ${escapeHtml(level)}">${escapeHtml(level)}</span>
+                            <span class="log-logger" title="Logger: ${escapeHtml(loggerName)}">(${escapeHtml(loggerName.replace('huntarr.', ''))})</span>
+                            <span class="log-message">${escapeHtml(message)}</span>
                         `;
                         logEntry.classList.add(`log-${level.toLowerCase()}`);
                     } else {
                         // Fallback for lines that don't match the expected format
-                        logEntry.innerHTML = `<span class="log-message">${logString}</span>`;
+                        logEntry.innerHTML = `<span class="log-message">${escapeHtml(logString)}</span>`;
                         
                         // Basic level detection for fallback
                         if (logString.includes('ERROR')) logEntry.classList.add('log-error');

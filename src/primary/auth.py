@@ -72,16 +72,22 @@ def save_user_data(user_data: Dict[str, Any]) -> bool:
         return False
 # --- End Helper functions ---
 
+def _prehash(password: str) -> bytes:
+    # bcrypt ignores/rejects input past 72 bytes; sha256 first keeps any length safe
+    import base64
+    return base64.b64encode(hashlib.sha256(password.encode()).digest())
+
 def hash_password(password: str) -> str:
-    """Hash a password for storage"""
-    # Use SHA-256 with a salt
-    salt = secrets.token_hex(16)
-    pw_hash = hashlib.sha256((password + salt).encode()).hexdigest()
-    return f"{salt}:{pw_hash}"
+    """Hash a password for storage (bcrypt)"""
+    import bcrypt
+    return bcrypt.hashpw(_prehash(password), bcrypt.gensalt(12)).decode()
 
 def verify_password(stored_password: str, provided_password: str) -> bool:
-    """Verify a password against its hash"""
+    """Verify a password against its hash (bcrypt, or legacy salt:sha256)"""
     try:
+        if stored_password.startswith('$2'):
+            import bcrypt
+            return bcrypt.checkpw(_prehash(provided_password), stored_password.encode())
         salt, pw_hash = stored_password.split(':', 1)
         verify_hash = hashlib.sha256((provided_password + salt).encode()).hexdigest()
         return secrets.compare_digest(verify_hash, pw_hash)
@@ -338,7 +344,7 @@ def authenticate_request():
         is_local = False
         
         # Check if request is coming through a proxy
-        forwarded_for = request.headers.get('X-Forwarded-For')
+        forwarded_for = None  # hardened: client-supplied header must never grant local-bypass
         if forwarded_for:
             logger.debug(f"X-Forwarded-For header detected: {forwarded_for}")
             # Take the first IP in the chain which is typically the client's real IP
