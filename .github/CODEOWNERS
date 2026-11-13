@@ -1,0 +1,12 @@
+# Sensitive paths: a PR touching any of these waits for the owner's review
+# (agent-policy elfhosted/CLAUDE.md "Sensitive paths"). Everything else merges
+# without review once checks pass. Keep this list the same in every repo.
+/.github/                 @funkypenguin
+/CODEOWNERS               @funkypenguin
+renovate.json             @funkypenguin
+renovate.json5            @funkypenguin
+.renovaterc*              @funkypenguin
+*rbac*                    @funkypenguin
+*clusterrole*             @funkypenguin
+*networkpolic*            @funkypenguin
+*kubeconfig*              @funkypenguin
